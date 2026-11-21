@@ -1,0 +1,61 @@
+# ============================================================
+# 自托管备选方案：docker compose up -d 一键起 数据库 + 应用
+# Vercel 部署不需要此文件。
+# ============================================================
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: blog-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?在 .env 里设置数据库密码}
+      POSTGRES_DB: techblog
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog -d techblog"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [blog]
+    # 数据库不对外暴露端口，仅容器网内可达
+
+  app:
+    build: .
+    container_name: blog-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://blog:${POSTGRES_PASSWORD}@db:5432/techblog?schema=public
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
+    ports:
+      - "127.0.0.1:3000:3000"   # 只绑本机，由 Nginx 反代对外
+    volumes:
+      # 自托管下上传走本地盘；若上传已改 Vercel Blob 则删掉此挂载
+      - uploads:/app/public/uploads
+    networks: [blog]
+
+  # 可选：站内全文检索加速（阶段 2 做搜索时再启用）
+  # meilisearch:
+  #   image: getmeili/meilisearch:v1.8
+  #   restart: unless-stopped
+  #   environment:
+  #     MEILI_MASTER_KEY: ${MEILI_KEY}
+  #   volumes: [meili:/meili_data]
+  #   networks: [blog]
+
+volumes:
+  pgdata:
+  uploads:
+  # meili:
+
+networks:
+  blog:
+    driver: bridge

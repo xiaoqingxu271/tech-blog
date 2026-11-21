@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  SPAM
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  posts Post[]
+
+  @@map("users")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  sort      Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  posts Post[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model Post {
+  id           String     @id @default(uuid())
+  title        String
+  slug         String     @unique
+  contentMd    String     @map("content_md")
+  excerpt      String?
+  cover        String?
+  status       PostStatus @default(DRAFT)
+  isTop        Boolean    @default(false) @map("is_top")
+  viewCount    Int        @default(0) @map("view_count")
+  categoryId   String?    @map("category_id")
+  authorId     String     @map("author_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  publishedAt  DateTime?  @map("published_at")
+
+  category Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author   User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags     PostTag[]
+  comments Comment[]
+  likes    Like[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([isTop])
+  @@map("posts")
+}
+
+model PostTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model Comment {
+  id         String        @id @default(uuid())
+  postId     String        @map("post_id")
+  parentId   String?       @map("parent_id")
+  authorName String        @map("author_name")
+  email      String?
+  website    String?
+  content    String
+  status     CommentStatus @default(PENDING)
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([postId, status])
+  @@map("comments")
+}
+
+model Link {
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  avatar      String?
+  description String?
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("links")
+}
+
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  visitorId String   @map("visitor_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, visitorId])
+  @@index([postId])
+  @@map("likes")
+}
