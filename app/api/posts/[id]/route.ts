@@ -20,7 +20,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!parsed.success) {
     return jsonError(parsed.error.issues.map((i) => i.message).join("; "));
   }
-  const post = await updatePost(params.id, parsed.data);
+  let post;
+  try {
+    post = await updatePost(params.id, parsed.data);
+  } catch (e: any) {
+    if (e?.code === "SLUG_TAKEN" || e?.code === "P2002") {
+      return jsonError("slug 已被占用", 400);
+    }
+    throw e;
+  }
   if (!post) return jsonError("文章不存在", 404);
   return jsonOk(post);
 }

@@ -201,6 +201,12 @@ export async function updatePost(id: string, input: PostUpdateInput) {
     })
     .catch((e) => {
       if (e?.code === "P2025") return null;
+      if (e?.code === "P2002") {
+        // slug 并发撞车：抛出带标记的错误，API 层转 400
+        const err = new Error("slug 已被占用");
+        (err as any).code = "SLUG_TAKEN";
+        throw err;
+      }
       throw e;
     });
 }
