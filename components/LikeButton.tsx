@@ -46,13 +46,13 @@ export default function LikeButton({ postId, initialCount }: { postId: string; i
   return (
     <button
       onClick={toggle}
-      className={`rounded-full border px-4 py-2 text-sm transition ${
+      className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm transition ${
         liked
-          ? "border-red-300 bg-red-50 text-red-500 dark:bg-red-950/30"
-          : "border-gray-300 hover:border-red-300 hover:text-red-500 dark:border-gray-700"
+          ? "border-rose-400/60 bg-rose-500/15 text-rose-300 shadow-glow"
+          : "border-white/15 bg-white/5 text-muted hover:border-rose-400/50 hover:text-rose-300"
       }`}
     >
-      ❤ {liked ? "已赞" : "点赞"} ({count})
+      {liked ? "❤" : "🤍"} {liked ? "已赞" : "点赞"} ({count})
     </button>
   );
 }

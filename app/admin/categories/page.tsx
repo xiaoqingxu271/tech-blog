@@ -3,10 +3,10 @@
 import AdminShell from "@/components/AdminShell";
 import { useEffect, useState } from "react";
 
-type Item = { id: string; name: string; slug: string; sort?: number; _count?: { posts: number } };
+type Category = { id: string; name: string; slug: string; sort?: number; _count?: { posts: number } };
 
 export default function AdminCategoriesPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [sort, setSort] = useState(0);
   const [editId, setEditId] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export default function AdminCategoriesPage() {
     setName(""); setSort(0); setEditId(null); load();
   };
 
-  const edit = (c: Item) => { setEditId(c.id); setName(c.name); setSort(c.sort ?? 0); };
+  const edit = (c: Category) => { setEditId(c.id); setName(c.name); setSort(c.sort ?? 0); };
   const remove = async (id: string) => {
     if (!confirm("删除后该分类下文章将变为无分类，确认？")) return;
     await fetch(`/api/categories/${id}`, { method: "DELETE" });
@@ -42,34 +42,42 @@ export default function AdminCategoriesPage() {
   return (
     <AdminShell>
       <h1 className="mb-6 text-2xl font-bold">分类管理</h1>
-      <form onSubmit={submit} className="mb-4 flex flex-wrap gap-2">
-        <input placeholder="分类名称" value={name} onChange={(e) => setName(e.target.value)} required className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <input type="number" placeholder="排序" value={sort} onChange={(e) => setSort(Number(e.target.value))} className="w-24 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <button className="rounded bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700">{editId ? "保存" : "新增"}</button>
-        {editId && <button type="button" onClick={() => { setEditId(null); setName(""); }} className="text-sm text-gray-500">取消</button>}
+
+      {/* 新增/编辑表单 */}
+      <form onSubmit={submit} className="glass mb-6 flex flex-wrap items-center gap-3 p-4">
+        <input placeholder="分类名称" value={name} onChange={(e) => setName(e.target.value)} required className="input-glass w-48" />
+        <input type="number" placeholder="排序" value={sort} onChange={(e) => setSort(Number(e.target.value))} className="input-glass w-24" />
+        <button className="btn-aurora rounded-full px-5 py-2 text-sm font-medium text-white">{editId ? "保存修改" : "+ 确认新增"}</button>
+        {editId && <button type="button" onClick={() => { setEditId(null); setName(""); }} className="text-sm text-muted hover:text-brand-300">取消</button>}
       </form>
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-slate-900">
-        <table className="w-full text-sm">
-          <thead className="border-b text-left text-gray-500 dark:border-gray-800">
-            <tr><th className="p-3">名称</th><th className="p-3">slug</th><th className="p-3">文章数</th><th className="p-3">操作</th></tr>
-          </thead>
-          <tbody>
-            {items.map((c) => (
-              <tr key={c.id} className="border-b border-gray-100 last:border-0 dark:border-gray-800">
-                <td className="p-3">{c.name}</td>
-                <td className="p-3 text-gray-400">{c.slug}</td>
-                <td className="p-3 text-gray-500">{c._count?.posts ?? 0}</td>
-                <td className="p-3">
-                  <div className="flex gap-3 text-xs">
-                    <button onClick={() => edit(c)} className="text-brand-600 hover:underline">编辑</button>
-                    <button onClick={() => remove(c.id)} className="text-red-500 hover:underline">删除</button>
+
+      {/* 分类卡网格 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((c, i) => {
+          const icons = ["📦", "🚀", "🎨", "🛠", "🧠", "🌌"];
+          return (
+            <div key={c.id} className="glass glass-hover group p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400/25 to-violet-500/25 text-xl">
+                    {icons[i % icons.length]}
+                  </span>
+                  <div>
+                    <h2 className="font-semibold">{c.name}</h2>
+                    <p className="text-xs text-muted">{c._count?.posts ?? 0} 篇文章 · 排序 {c.sort ?? 0}</p>
                   </div>
-                </td>
-              </tr>
-            ))}
-            {items.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-gray-400">暂无分类</td></tr>}
-          </tbody>
-        </table>
+                </div>
+                <span className="text-muted transition group-hover:text-brand-300">→</span>
+              </div>
+              <div className="mt-4 flex gap-3 border-t border-white/10 pt-3 text-xs">
+                <button onClick={() => edit(c)} className="text-brand-300 hover:underline">编辑</button>
+                <button onClick={() => remove(c.id)} className="text-rose-400 hover:underline">删除</button>
+                <span className="ml-auto text-white/30">{c.slug}</span>
+              </div>
+            </div>
+          );
+        })}
+        {items.length === 0 && <p className="glass py-12 text-center text-muted sm:col-span-2 lg:col-span-3">暂无分类</p>}
       </div>
     </AdminShell>
   );

@@ -2,7 +2,8 @@
 
 import AdminShell from "@/components/AdminShell";
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 type Comment = {
   id: string;
@@ -18,6 +19,24 @@ const statusLabel: Record<string, string> = {
   APPROVED: "已通过",
   SPAM: "垃圾"
 };
+
+const statusBadge: Record<string, string> = {
+  PENDING: "border border-amber-400/40 bg-amber-400/10 text-amber-300",
+  APPROVED: "border border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+  SPAM: "border border-violet-400/40 bg-violet-400/10 text-violet-300"
+};
+
+function avatarGradient(name: string) {
+  const palettes = [
+    "from-cyan-400 to-blue-500",
+    "from-violet-400 to-fuchsia-500",
+    "from-rose-400 to-orange-400",
+    "from-emerald-400 to-teal-500"
+  ];
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % 997;
+  return palettes[hash % palettes.length];
+}
 
 export default function AdminCommentsPage() {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -42,40 +61,66 @@ export default function AdminCommentsPage() {
   };
 
   const shown = filter === "ALL" ? comments : comments.filter((c) => c.status === filter);
+  const countOf = (s: string) => comments.filter((c) => c.status === s).length;
+  const pending = countOf("PENDING");
 
   return (
     <AdminShell>
       <h1 className="mb-6 text-2xl font-bold">评论管理</h1>
-      <div className="mb-4 flex gap-2 text-sm">
+
+      {/* 状态 Tab，待审核带红点 */}
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
         {["ALL", "PENDING", "APPROVED", "SPAM"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`rounded px-3 py-1 ${filter === f ? "bg-brand-600 text-white" : "border border-gray-300 dark:border-gray-700"}`}
+            className={`relative rounded-full px-4 py-1.5 transition ${
+              filter === f ? "btn-aurora text-white" : "glass border-white/10 text-muted hover:text-brand-300"
+            }`}
           >
-            {f === "ALL" ? "全部" : statusLabel[f]}
+            {f === "ALL" ? `全部 ${comments.length}` : `${statusLabel[f]} ${countOf(f)}`}
+            {f === "PENDING" && pending > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                {pending}
+              </span>
+            )}
           </button>
         ))}
       </div>
+
       <div className="space-y-3">
         {shown.map((c) => (
-          <div key={c.id} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">{c.authorName} · <span className="text-gray-400">{c.post?.title}</span></span>
-              <time className="text-xs text-gray-400">{format(new Date(c.createdAt), "yyyy-MM-dd HH:mm")}</time>
-            </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{c.content}</p>
-            <div className="mt-3 flex items-center gap-3 text-xs">
-              <span className={`rounded px-2 py-0.5 ${c.status === "APPROVED" ? "bg-green-100 text-green-600" : c.status === "PENDING" ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-500"}`}>
+          <div key={c.id} className="glass p-4">
+            <div className="flex items-center gap-3">
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(c.authorName)} text-sm font-bold text-white`}>
+                {c.authorName.slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm">
+                  <span className="font-medium">{c.authorName}</span>
+                  {c.post && <span className="text-muted"> · 评论于《{c.post.title}》</span>}
+                </div>
+                <time className="text-xs text-muted">
+                  {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: zhCN })}
+                </time>
+              </div>
+              <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ${statusBadge[c.status]}`}>
                 {statusLabel[c.status]}
               </span>
-              {c.status !== "APPROVED" && <button onClick={() => setStatus(c.id, "APPROVED")} className="text-green-600 hover:underline">通过</button>}
-              {c.status !== "SPAM" && <button onClick={() => setStatus(c.id, "SPAM")} className="text-gray-500 hover:underline">标为垃圾</button>}
-              <button onClick={() => remove(c.id)} className="text-red-500 hover:underline">删除</button>
+            </div>
+            <p className="mt-3 whitespace-pre-wrap text-sm">{c.content}</p>
+            <div className="mt-3 flex items-center gap-4 border-t border-white/10 pt-3 text-xs">
+              {c.status !== "APPROVED" && (
+                <button onClick={() => setStatus(c.id, "APPROVED")} className="text-emerald-300 hover:underline">✓ 通过</button>
+              )}
+              {c.status !== "SPAM" && (
+                <button onClick={() => setStatus(c.id, "SPAM")} className="text-muted hover:text-violet-300">标为垃圾</button>
+              )}
+              <button onClick={() => remove(c.id)} className="text-rose-400 hover:underline">删除</button>
             </div>
           </div>
         ))}
-        {shown.length === 0 && <p className="text-gray-400">暂无评论</p>}
+        {shown.length === 0 && <p className="glass py-12 text-center text-muted">暂无评论</p>}
       </div>
     </AdminShell>
   );

@@ -17,24 +17,35 @@ export default function Pagination({
     return `${basePath}${sep}page=${p}`;
   };
 
+  const pageClass = (active: boolean) =>
+    `flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-sm transition ${
+      active
+        ? "btn-aurora text-white shadow-glow"
+        : "glass border-white/10 text-muted hover:border-brand-400/50 hover:text-brand-300"
+    }`;
+
+  const pages: number[] = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) pages.push(p);
+  }
+
   return (
-    <div className="mt-8 flex items-center justify-center gap-4 text-sm">
+    <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
       {prev ? (
-        <Link href={build(prev)} className="rounded border border-gray-300 px-3 py-1.5 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-slate-800">
-          上一页
-        </Link>
+        <Link href={build(prev)} className={pageClass(false)}>‹</Link>
       ) : (
-        <span className="rounded border border-gray-200 px-3 py-1.5 text-gray-300 dark:border-gray-800">上一页</span>
+        <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-sm text-white/20">‹</span>
       )}
-      <span className="text-gray-500">
-        第 {page} / {totalPages} 页
-      </span>
+      {pages.map((p, i) => (
+        <span key={p} className="flex items-center gap-2">
+          {i > 0 && p - pages[i - 1] > 1 && <span className="text-white/30">…</span>}
+          <Link href={build(p)} className={pageClass(p === page)}>{p}</Link>
+        </span>
+      ))}
       {next ? (
-        <Link href={build(next)} className="rounded border border-gray-300 px-3 py-1.5 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-slate-800">
-          下一页
-        </Link>
+        <Link href={build(next)} className={pageClass(false)}>›</Link>
       ) : (
-        <span className="rounded border border-gray-200 px-3 py-1.5 text-gray-300 dark:border-gray-800">下一页</span>
+        <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-3 text-sm text-white/20">›</span>
       )}
     </div>
   );

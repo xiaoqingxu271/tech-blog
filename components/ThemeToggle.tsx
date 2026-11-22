@@ -22,7 +22,7 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="切换主题"
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-slate-800"
+      className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs transition hover:border-brand-400/60 hover:text-brand-300"
     >
       {dark ? "🌙" : "☀️"}
     </button>

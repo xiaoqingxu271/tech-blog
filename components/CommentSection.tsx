@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 type Comment = {
   id: string;
@@ -10,6 +11,62 @@ type Comment = {
   createdAt: string;
   replies?: Comment[];
 };
+
+function avatarGradient(name: string) {
+  const palettes = [
+    "from-cyan-400 to-blue-500",
+    "from-violet-400 to-fuchsia-500",
+    "from-rose-400 to-orange-400",
+    "from-emerald-400 to-teal-500",
+    "from-amber-400 to-pink-500"
+  ];
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % 997;
+  return palettes[hash % palettes.length];
+}
+
+function CommentItem({
+  c,
+  onReply
+}: {
+  c: Comment;
+  onReply: (id: string) => void;
+}) {
+  return (
+    <div className="glass p-4">
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(c.authorName)} text-sm font-bold text-white`}
+        >
+          {c.authorName.slice(0, 1).toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-medium">{c.authorName}</div>
+          <time className="text-xs text-muted">
+            {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: zhCN })}
+          </time>
+        </div>
+      </div>
+      <p className="mt-3 whitespace-pre-wrap text-sm">{c.content}</p>
+      <button
+        className="mt-2 inline-flex items-center gap-1 text-xs text-muted transition hover:text-brand-300"
+        onClick={() => onReply(c.id)}
+      >
+        ↩ 回复
+      </button>
+      {c.replies && c.replies.length > 0 && (
+        <div className="mt-3 space-y-3 border-l-2 border-brand-400/30 pl-4">
+          {c.replies.map((r) => (
+            <div key={r.id} className="flex items-start gap-2 text-sm">
+              <span className="font-medium text-brand-300">{r.authorName}：</span>
+              <span className="min-w-0">{r.content}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CommentSection({ postId }: { postId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -46,58 +103,43 @@ export default function CommentSection({ postId }: { postId: string }) {
   };
 
   return (
-    <section className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
+    <section className="mt-10">
       <h3 className="text-lg font-semibold">评论 ({comments.length})</h3>
 
       <div className="mt-4 space-y-4">
-        {comments.length === 0 && <p className="text-sm text-gray-400">还没有评论，来抢沙发吧~</p>}
+        {comments.length === 0 && <p className="glass p-5 text-sm text-muted">还没有评论，来抢沙发吧~</p>}
         {comments.map((c) => (
-          <div key={c.id} className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">{c.authorName}</span>
-              <time className="text-xs text-gray-400">{format(new Date(c.createdAt), "yyyy-MM-dd HH:mm")}</time>
-            </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{c.content}</p>
-            <button
-              className="mt-2 text-xs text-brand-600 hover:underline"
-              onClick={() => setReplyTo(c.id)}
-            >
-              回复
-            </button>
-            {c.replies && c.replies.length > 0 && (
-              <div className="mt-3 space-y-2 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
-                {c.replies.map((r) => (
-                  <div key={r.id} className="text-sm">
-                    <span className="font-medium">{r.authorName}：</span>
-                    <span>{r.content}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CommentItem key={c.id} c={c} onReply={setReplyTo} />
         ))}
       </div>
 
-      <form onSubmit={submit} className="mt-6 space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-slate-800/50">
-        <h4 className="font-medium">{replyTo ? "回复评论" : "发表评论"}</h4>
+      <form onSubmit={submit} className="glass mt-6 space-y-3 p-5">
+        <h4 className="font-medium">
+          {replyTo ? "回复评论" : "发表评论"}
+          {replyTo && (
+            <button type="button" className="ml-3 text-xs text-muted hover:text-brand-300" onClick={() => setReplyTo(null)}>
+              取消回复
+            </button>
+          )}
+        </h4>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input
             required
             placeholder="昵称*"
-            className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-900"
+            className="input-glass"
             value={form.authorName}
             onChange={(e) => setForm({ ...form, authorName: e.target.value })}
           />
           <input
             type="email"
             placeholder="邮箱"
-            className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-900"
+            className="input-glass"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <input
             placeholder="网站"
-            className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-900"
+            className="input-glass"
             value={form.website}
             onChange={(e) => setForm({ ...form, website: e.target.value })}
           />
@@ -106,20 +148,15 @@ export default function CommentSection({ postId }: { postId: string }) {
           required
           rows={4}
           placeholder="评论内容*"
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-900"
+          className="input-glass w-full"
           value={form.content}
           onChange={(e) => setForm({ ...form, content: e.target.value })}
         />
         <div className="flex items-center gap-3">
-          <button type="submit" className="rounded bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700">
-            提交
+          <button type="submit" className="btn-aurora rounded-full px-6 py-2 text-sm font-medium text-white">
+            提交评论
           </button>
-          {replyTo && (
-            <button type="button" className="text-sm text-gray-500" onClick={() => setReplyTo(null)}>
-              取消回复
-            </button>
-          )}
-          {msg && <span className="text-sm text-brand-600">{msg}</span>}
+          {msg && <span className="text-sm text-brand-300">{msg}</span>}
         </div>
       </form>
     </section>

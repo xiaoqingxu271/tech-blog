@@ -39,30 +39,47 @@ export default function AdminLinksPage() {
   return (
     <AdminShell>
       <h1 className="mb-6 text-2xl font-bold">友链管理</h1>
-      <form onSubmit={submit} className="mb-6 grid gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2 dark:border-gray-800 dark:bg-slate-900">
-        <input placeholder="名称*" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <input placeholder="URL*" required value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <input placeholder="头像 URL" value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <input placeholder="描述" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800" />
-        <div className="flex gap-2">
-          <button className="rounded bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700">{editId ? "保存" : "新增"}</button>
-          {editId && <button type="button" onClick={() => { setEditId(null); setForm({ name: "", url: "", avatar: "", description: "", sort: 0 }); }} className="text-sm text-gray-500">取消</button>}
+
+      {/* 新增/编辑表单 */}
+      <form onSubmit={submit} className="glass mb-6 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <input placeholder="站点名称*" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-glass" />
+        <input placeholder="网址 URL*" required value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} className="input-glass" />
+        <input placeholder="Logo 地址" value={form.avatar} onChange={(e) => setForm({ ...form, avatar: e.target.value })} className="input-glass" />
+        <input type="number" placeholder="排序" value={form.sort} onChange={(e) => setForm({ ...form, sort: Number(e.target.value) })} className="input-glass" />
+        <input placeholder="站点描述" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-glass sm:col-span-2 lg:col-span-3" />
+        <div className="flex items-center gap-3">
+          <button className="btn-aurora rounded-full px-5 py-2 text-sm font-medium text-white">{editId ? "保存修改" : "+ 确认新增"}</button>
+          {editId && <button type="button" onClick={() => { setEditId(null); setForm({ name: "", url: "", avatar: "", description: "", sort: 0 }); }} className="text-sm text-muted hover:text-brand-300">取消</button>}
         </div>
       </form>
-      <div className="space-y-2">
+
+      {/* 友链卡网格 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {links.map((l) => (
-          <div key={l.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 text-sm dark:border-gray-800 dark:bg-slate-900">
-            <div>
-              <div className="font-medium">{l.name}</div>
-              <div className="text-xs text-gray-400">{l.url}</div>
+          <div key={l.id} className="glass glass-hover group p-5">
+            <div className="flex items-center gap-3">
+              {l.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={l.avatar} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400/30 to-violet-500/30 font-bold text-brand-300">
+                  {l.name.slice(0, 1)}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{l.name}</div>
+                <div className="truncate text-xs text-muted">{l.description || l.url}</div>
+              </div>
             </div>
-            <div className="flex gap-3 text-xs">
-              <button onClick={() => edit(l)} className="text-brand-600 hover:underline">编辑</button>
-              <button onClick={() => remove(l.id)} className="text-red-500 hover:underline">删除</button>
+            <div className="mt-4 flex items-center gap-3 border-t border-white/10 pt-3 text-xs">
+              <a href={l.url} target="_blank" rel="noreferrer noopener" className="text-brand-300 hover:underline">点击访问 ↗</a>
+              <button onClick={() => edit(l)} className="text-muted hover:text-brand-300">编辑</button>
+              <button onClick={() => remove(l.id)} className="text-rose-400 hover:underline">删除</button>
+              <span className="ml-auto text-white/30">排序：{l.sort}</span>
             </div>
           </div>
         ))}
-        {links.length === 0 && <p className="text-gray-400">暂无友链</p>}
+        {links.length === 0 && <p className="glass py-12 text-center text-muted sm:col-span-2 lg:col-span-3">暂无友链</p>}
       </div>
     </AdminShell>
   );

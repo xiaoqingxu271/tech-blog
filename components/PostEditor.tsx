@@ -109,80 +109,93 @@ export default function PostEditor({ postId }: { postId?: string }) {
 
   return (
     <AdminShell>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{postId ? "编辑文章" : "新建文章"}</h1>
-        <div className="flex gap-2">
-          <button onClick={() => save("DRAFT")} disabled={saving} className="rounded border border-gray-300 px-4 py-2 text-sm dark:border-gray-700">
+        <div className="flex gap-3">
+          <button onClick={() => save("DRAFT")} disabled={saving} className="glass rounded-full px-5 py-2 text-sm text-muted hover:text-brand-300">
             存草稿
           </button>
-          <button onClick={() => save("PUBLISHED")} disabled={saving} className="rounded bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700">
+          <button onClick={() => save("PUBLISHED")} disabled={saving} className="btn-aurora rounded-full px-6 py-2 text-sm font-medium text-white">
             发布
           </button>
         </div>
       </div>
-      {msg && <p className="mb-4 rounded bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
+      {msg && <p className="glass mb-4 border-brand-400/40 px-4 py-2.5 text-sm text-brand-300">{msg}</p>}
 
       <div className="grid gap-4 lg:grid-cols-3">
+        {/* 编辑区 */}
         <div className="space-y-3 lg:col-span-2">
           <input
-            placeholder="文章标题"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-lg font-semibold dark:border-gray-700 dark:bg-slate-800"
+            placeholder="输入文章标题…"
+            className="glass w-full rounded-2xl px-5 py-4 text-xl font-bold outline-none transition focus:border-brand-400/60"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
           <input
             placeholder="slug（留空自动生成）"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-slate-800"
+            className="input-glass w-full"
             value={form.slug}
             onChange={(e) => setForm({ ...form, slug: e.target.value })}
           />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">正文（Markdown）</span>
-            <button onClick={() => setPreview(!preview)} className="text-sm text-brand-600">
-              {preview ? "编辑" : "预览"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPreview(false)}
+                className={`rounded-full px-4 py-1.5 text-sm transition ${!preview ? "btn-aurora text-white" : "glass border-white/10 text-muted"}`}
+              >
+                编辑
+              </button>
+              <button
+                onClick={() => setPreview(true)}
+                className={`rounded-full px-4 py-1.5 text-sm transition ${preview ? "btn-aurora text-white" : "glass border-white/10 text-muted"}`}
+              >
+                预览
+              </button>
+            </div>
+            <span className="text-xs text-muted">{form.contentMd.length} 字符</span>
           </div>
           {preview ? (
-            <div className="min-h-[400px] rounded border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-slate-900">
+            <div className="glass min-h-[460px] p-5">
               <MarkdownRenderer content={form.contentMd} />
             </div>
           ) : (
             <textarea
               placeholder="在这里写 Markdown..."
-              className="h-[400px] w-full rounded border border-gray-300 p-3 font-mono text-sm dark:border-gray-700 dark:bg-slate-800"
+              className="glass h-[460px] w-full rounded-2xl p-4 font-mono text-sm outline-none transition focus:border-brand-400/60"
               value={form.contentMd}
               onChange={(e) => setForm({ ...form, contentMd: e.target.value })}
             />
           )}
         </div>
 
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-slate-900">
+        {/* 右侧属性栏 */}
+        <div className="glass h-fit space-y-5 rounded-2xl p-5">
           <div>
-            <label className="text-xs text-gray-500">摘要</label>
+            <label className="text-xs text-muted">摘要</label>
             <textarea
               rows={3}
-              className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-slate-800"
+              className="input-glass mt-1.5 w-full"
               value={form.excerpt}
               onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500">封面图</label>
+            <label className="text-xs text-muted">封面图</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-              className="mt-1 block w-full text-xs"
+              className="mt-1.5 block w-full text-xs text-muted file:mr-3 file:rounded-full file:border-0 file:bg-brand-400/15 file:px-3 file:py-1.5 file:text-xs file:text-brand-300"
             />
             {form.cover && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.cover} alt="" className="mt-2 h-24 w-full rounded object-cover" />
+              <img src={form.cover} alt="" className="mt-2 h-28 w-full rounded-xl object-cover" />
             )}
           </div>
           <div>
-            <label className="text-xs text-gray-500">分类</label>
+            <label className="text-xs text-muted">分类</label>
             <select
-              className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-slate-800"
+              className="input-glass mt-1.5 w-full"
               value={form.categoryId}
               onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
             >
@@ -193,8 +206,8 @@ export default function PostEditor({ postId }: { postId?: string }) {
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-500">标签</label>
-            <div className="mt-1 flex flex-wrap gap-2">
+            <label className="text-xs text-muted">标签</label>
+            <div className="mt-1.5 flex flex-wrap gap-2">
               {tags.map((t) => {
                 const checked = form.tagIds.includes(t.id);
                 return (
@@ -209,8 +222,10 @@ export default function PostEditor({ postId }: { postId?: string }) {
                           : [...form.tagIds, t.id]
                       })
                     }
-                    className={`rounded-full px-2 py-0.5 text-xs ${
-                      checked ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300"
+                    className={`rounded-full border px-3 py-0.5 text-xs transition ${
+                      checked
+                        ? "border-brand-400/60 bg-brand-400/15 text-brand-300"
+                        : "border-white/10 bg-white/5 text-muted hover:border-violet-400/50 hover:text-violet-300"
                     }`}
                   >
                     #{t.name}
@@ -219,10 +234,26 @@ export default function PostEditor({ postId }: { postId?: string }) {
               })}
             </div>
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.isTop} onChange={(e) => setForm({ ...form, isTop: e.target.checked })} />
-            置顶
+          <label className="flex items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isTop}
+              onChange={(e) => setForm({ ...form, isTop: e.target.checked })}
+              className="h-4 w-4 accent-cyan-400"
+            />
+            置顶文章
           </label>
+          <div>
+            <label className="text-xs text-muted">发布状态</label>
+            <select
+              className="input-glass mt-1.5 w-full"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value as "DRAFT" | "PUBLISHED" })}
+            >
+              <option value="DRAFT">草稿</option>
+              <option value="PUBLISHED">已发布</option>
+            </select>
+          </div>
         </div>
       </div>
     </AdminShell>
