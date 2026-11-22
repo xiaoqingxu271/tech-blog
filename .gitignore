@@ -14,3 +14,7 @@ public/uploads/*
 !public/uploads/.gitkeep
 
 *.tsbuildinfo
+.vercel
+.env*
+
+.admin-tmp
